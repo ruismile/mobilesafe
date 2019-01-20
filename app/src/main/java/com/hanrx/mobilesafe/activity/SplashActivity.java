@@ -4,8 +4,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,10 +19,15 @@ import android.widget.Toast;
 import com.hanrx.mobilesafe.R;
 import com.hanrx.mobilesafe.utils.StreamUtil;
 import com.hanrx.mobilesafe.utils.ToastUtil;
+import com.lidroid.xutils.HttpUtils;
+import com.lidroid.xutils.exception.HttpException;
+import com.lidroid.xutils.http.ResponseInfo;
+import com.lidroid.xutils.http.callback.RequestCallBack;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -52,6 +60,7 @@ public class SplashActivity extends AppCompatActivity {
     private TextView tv_version_name;
     private int mLocalVersionCode = 0;
     private String mVersionDes;
+    private String mDownloadUrl;
 
     private  Handler mHandler = new Handler() {
         @Override
@@ -123,11 +132,82 @@ public class SplashActivity extends AppCompatActivity {
                 enterHome();
             }
         });
+        //点击取消事件监听
+        builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialogInterface) {
+                //即使用户点击取消也让用户进入主界面
+                enterHome();
+                dialogInterface.dismiss();
+            }
+        });
         builder.show();
     }
 
     protected void downloadApk() {
-        
+        //apk下载链接地址，放置apk的所在路径
+        //1.判断sd卡是否可用，是否挂载上
+        if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            //2.获取sd卡路径
+            String path = Environment.getExternalStorageDirectory().getAbsolutePath()
+                    + File.separator + "mobilesafe.apk";
+            //3.发送请求获取apk，并且放置到指定路径
+            HttpUtils httpUtils = new HttpUtils();
+            //4.发送请求传递参数(下载地址，下载应用放置的位置)
+            httpUtils.download(mDownloadUrl, path, new RequestCallBack<File>() {
+                @Override
+                public void onSuccess(ResponseInfo<File> responseInfo) {
+                    //下载成功(下载成功放在sd卡中的apk)
+                    Log.i(TAG, "下载成功");
+                    File file = responseInfo.result;
+                    //提示用户安装
+                    installApk(file);
+                }
+
+                @Override
+                public void onFailure(HttpException e, String s) {
+                    //下载失败
+
+                }
+                //刚刚开始下载
+                @Override
+                public void onStart() {
+                    Log.i(TAG, "刚刚开始下载");
+                    super.onStart();
+                }
+                //下载中的方法(下载apk的大小，当前下载的位置，是否正在下载)
+                @Override
+                public void onLoading(long total, long current, boolean isUploading) {
+                    Log.i(TAG, "下载中.....");
+                    Log.i(TAG, "total = " + total);
+                    Log.i(TAG, "current = " + current);
+                    Log.i(TAG, "isUplaoding = " + isUploading);
+                    super.onLoading(total, current, isUploading);
+                }
+            });
+        }
+    }
+
+    /**
+     *  安装对应apk
+     * @param file 安装文件
+     */
+    protected void installApk(File file) {
+        //系统应用姐买你，源码，安装apk入口
+        Intent intent = new Intent("android.intent.action.VIEW");
+        intent.addCategory("android.intent.category.DEFAULT");
+        /*//文件作为数据源
+        intent.setData(Uri.fromFile(file));
+        //设置安装的类型
+        intent.setType("application/vnd.android.package-archive");*/
+        intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
+        startActivityForResult(intent, 0);
+    }
+    //开启一个activity后，返回结果调用的方法
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        enterHome();
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     /**
@@ -174,8 +254,9 @@ public class SplashActivity extends AppCompatActivity {
                     //发送请求获取数据
                     //封装url地址
                     //URL url = new URL("http://192.168.103.166/update.json");
+                    URL url = new URL("http://192.168.1.103/update.json");
                     //仅限模拟器访问电脑tomcat
-                    URL url = new URL("http://10.0.2.2/update.json");
+                    //URL url = new URL("http://10.0.2.2/update.json");
                     //开启一个链接
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                     //设置常见请求参数(请求头)
@@ -197,12 +278,12 @@ public class SplashActivity extends AppCompatActivity {
                         String versionName = jsonObject.getString("versionName");
                         mVersionDes = jsonObject.getString("versionDes");
                         String versionCode = jsonObject.getString("versionCode");
-                        String downloadUrl = jsonObject.getString("downloadUrl");
+                        mDownloadUrl = jsonObject.getString("downloadUrl");
 
                         Log.i(TAG, versionName);
                         Log.i(TAG, mVersionDes);
                         Log.i(TAG, versionCode);
-                        Log.i(TAG, downloadUrl);
+                        Log.i(TAG, mDownloadUrl);
 
                         //比对版本号(服务器版本号)本地版本号,提示用户更新
                         Log.i(TAG, "mLocalVersionCode = " + mLocalVersionCode);
