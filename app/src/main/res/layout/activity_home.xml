@@ -8,10 +8,35 @@
     tools:context="com.hanrx.mobilesafe.activity.HomeActivity">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:text="功能列表"
+        style="@style/TitleStyle"/>
+    <!--<TextView
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="HomeActivity"
-        android:textSize="20sp"
-        android:textColor="#000"/>
+        android:text="落霞与孤鹜齐飞，秋水共长天一色，落霞与孤鹜齐飞，秋水共长天一色"
+        android:textColor="#000"
+        android:singleLine="true"
+        android:padding="5dp"
+        android:ellipsize="marquee"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:marqueeRepeatLimit="marquee_forever"/>-->
+    <com.hanrx.mobilesafe.view.FocusTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="落霞与孤鹜齐飞，秋水共长天一色，落霞与孤鹜齐飞，秋水共长天一色"
+        android:textColor="#000"
+        android:singleLine="true"
+        android:padding="5dp"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"/>
 
+    <GridView
+        android:id="@+id/gv_home"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:numColumns="3"
+        android:verticalSpacing="10dp">
+
+    </GridView>
 </LinearLayout>

@@ -13,6 +13,9 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -58,6 +61,7 @@ public class SplashActivity extends AppCompatActivity {
      */
     private static final int JSON_ERROR = 104;
     private TextView tv_version_name;
+    private RelativeLayout rl_root;
     private int mLocalVersionCode = 0;
     private String mVersionDes;
     private String mDownloadUrl;
@@ -100,6 +104,17 @@ public class SplashActivity extends AppCompatActivity {
         initUI();
         //初始化数据
         initData();
+        //初始化动画
+        initAnimation();
+    }
+
+    /**
+     * 添加淡入动画效果
+     */
+    private void initAnimation() {
+        AlphaAnimation alphaAnimation = new AlphaAnimation(0, 1);
+        alphaAnimation.setDuration(3000);
+        rl_root.startAnimation(alphaAnimation);
     }
 
     /**
@@ -107,6 +122,7 @@ public class SplashActivity extends AppCompatActivity {
      */
     private void initUI() {
         tv_version_name = findViewById(R.id.tv_version_name);
+        rl_root = findViewById(R.id.rl_root);
     }
 
     /**
@@ -254,7 +270,7 @@ public class SplashActivity extends AppCompatActivity {
                     //发送请求获取数据
                     //封装url地址
                     //URL url = new URL("http://192.168.103.166/update.json");
-                    URL url = new URL("http://192.168.1.103/update.json");
+                    URL url = new URL("http://192.168.1.105/update.json");
                     //仅限模拟器访问电脑tomcat
                     //URL url = new URL("http://10.0.2.2/update.json");
                     //开启一个链接
